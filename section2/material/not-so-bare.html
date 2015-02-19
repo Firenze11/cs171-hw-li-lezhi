@@ -54,10 +54,12 @@
     .attr("fill", function(d, i) {
         return color(d);
     })
-    .attr("width", 100)
-    .attr("height", bar_height)
-    .attr("x", 50)
-    .attr("y", function(d, i) {
+    .attr("width", bar_height)
+    .attr("height", function (d, i) {
+        return scale(d);
+    })
+    .attr("y", 50)
+    .attr("x", function(d, i) {
         return scale(d);
     });
 
