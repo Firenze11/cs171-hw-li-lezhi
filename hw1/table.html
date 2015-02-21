@@ -3,12 +3,17 @@
 <meta charset="utf-8">
   <body>
       <div id="multiple_select">
-          <strong>Filter:</strong>
-          <label><input type="checkbox" name="Americas" value="1" id="Americas" />Americas</label>
-          <label><input type="checkbox" name="Africa" value="1" id="Africa" />Africa</label>
-          <label><input type="checkbox" name="Asia" value="1" id="Asia" />Asia</label>
-          <label><input type="checkbox" name="Europe" value="1" id="Europe" />Europe</label>
-          <label><input type="checkbox" name="Oceania" value="1" id="Europe" />Oceania</label>
+        <strong>Filter:</strong>
+        <label><input type="checkbox" name="Americas" value="1" id="Americas" />Americas</label>
+        <label><input type="checkbox" name="Africa" value="1" id="Africa" />Africa</label>
+        <label><input type="checkbox" name="Asia" value="1" id="Asia" />Asia</label>
+        <label><input type="checkbox" name="Europe" value="1" id="Europe" />Europe</label>
+        <label><input type="checkbox" name="Oceania" value="1" id="Europe" />Oceania</label>
+      </div>
+      <div id="single_select">
+        <strong>Aggregation:</strong>
+        <label><input type="radio" name="details" value="1" id="non_aggr">None  </label>
+        <label><input type="radio" name="details" value="1" id="contin_aggr">By Continent  </label>
       </div>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script>
@@ -61,9 +66,12 @@
         var continents_selected =[];
         d3.selectAll("#multiple_select input")
           .on("change", function () {
-            continents_selected = d3.selectAll("#multiple_select input")
+                                    //select all checkboxes
+            continents_selected = d3.selectAll("#multiple_select input") 
+                                    //select checked ones
                                     .filter(function () {
                                         return d3.select(this).property('checked') == true;})[0]
+                                    //extract names from checked ones
                                     .map(function (e) {
                                         return d3.select(e).attr("name");  });
             //console.log(continents_selected);  });
@@ -85,28 +93,37 @@
             console.log(filtered_data);
             update(filtered_data);  // Update the chart with the filtered data
           })
-            //console.log(filtered_data);  
+                                                                                  //nest select->
+        function aggregate(){
+          var nested_rows = d3.nest()
+                              .key(function(d) { return d.continent; })
+                              .rollup(function(d) { return {
+                                  population:d3.sum(d,function(g) {return +g.population;}),
+                                  gdp:d3.sum(d,function(g) {return +g.gdp;}),
+                                  life_expectancy: d3.mean(d, function(g) {return +g.life_expectancy;}),
+                                  population: d3.sum(d, function(g) {return +g.population;})       
+                              }; }) // Where aggregation happens
+                              .entries(data);
+          //console.log(nested_rows);
+          nested_rows=nested_rows.map(function(ob){
+                                    return {"alpha2_code":ob.key, 
+                                            "continent":ob.key, 
+                                            "gdp":ob.values.gdp, 
+                                            "life_expectancy": ob.values.life_expectancy,
+                                            "population":ob.values.population
+                                          }; 
+                                  });
+          console.log(nested_rows);
+          update(nested_rows);    
+        }
 
-
-
-/*            d3.select("#Americas").on("change", function () {
-                        // This will be triggered when the user selects or unselects the checkbox
-
-                        if (d3.select(this).property('checked') == true) {
-                            // Checkbox was just checked
-
-                            var filtered_data = json.filter(function (d) {
-                                // Keep only data element whose country is US
-                                return d["continent"] == "Americas";
-                            })
-                            console.log(filtered_data);
-                            update(filtered_data);  // Update the chart with the filtered data
-                        } else {
-                            // Checkbox was just unchecked
-                            update(json);  // Update the chart with all the data we have
-                        }
-                    }); */
-
+        d3.select("#single_select")
+          .on("change", function () {
+            if (d3.select("#contin_aggr").property('checked')==true){
+              aggregate();
+            }
+            else{update(json);}
+          }); 
 
                                                                                       //enter rows->
         var rows = tbody.selectAll("tr.row")
@@ -158,10 +175,11 @@
                                           return "#FFCFCF";
                                         else
                                           return "white";  })  });
-          console.log(update_rows.length);
+          //console.log(update_rows.length);
 
           var cells = update_rows.selectAll("td")
                                 .data(function (row) {
+                                  console.log(Object.keys(row));
                                   return d3.range(Object.keys(row).length)
                                           .map(function (column, i) {
                                             return row[Object.keys(row)[i]];  });  })
