@@ -13,24 +13,25 @@
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script>
       var columnAscend = [false,false,false,false,false,false,false,false,false,];
-                                                                                       //load data->
+      /////////////////////////////////////////////////////////////////////////////////load data->
       d3.json("data/countries_2012.json", function(error, data){
-        var json = data;
-        var columns = Object.keys(data[0]);
-        var table = d3.select("body")
-                      .append("table");
-            thead = table.append("thead")
-                         .attr("class", "thead");
-            tbody = table.append("tbody");
-        table.append("caption")
-              .html("World Countries Ranking xxxxxx");
+          var json = data;
+          var columns = Object.keys(data[0]);
+          var table = d3.select("body")
+                        .append("table");
+              thead = table.append("thead")
+                           .attr("class", "thead");
+              tbody = table.append("tbody");
+          table.append("caption")
+                .html("World Countries Ranking xxxxxx");
+
         thead.append("tr").selectAll("th")
                           .data(columns)
                           .enter()
                           .append("th")
                           .text(function (d) { return d; })
                           //.attr("ascend_descend","descend")
-                                                                                    //click sorting->
+          /////////////////////////////////////////////////////////////////////////click sorting->
                           .on("click", function (header, i) {
                             columnAscend[i] = ! columnAscend[i];
                               if (columnAscend[i] == false) {
@@ -39,7 +40,7 @@
                               else {
                                 var sorted_rows = tbody.selectAll("tr").sort(function (a, b) {
                                   return d3.ascending(a[header], b[header]);  });  }
-                                                                                     //update style->
+          /////////////////////////////////////////////////////////////////////////update style->
                             sorted_rows.style("background-color", function (d, i) {
                                           if (i % 2 == 0)
                                             return "#FFCFCF";
@@ -53,90 +54,49 @@
                                               if (i % 2 == 0)
                                                 return "#FFCFCF";
                                               else
-                                                return "white"; })  })  });
-                                                                                  //multiple select->
-                                                                                  //ATTENTION!!!!!!!!
-                                                                                  //how to select 
-                                                                                  //and access elements
+                                                return "white"; }) 
+                                      }) 
+                          });
+///////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////multiple select->
         var continents_selected =[];
         d3.selectAll("#multiple_select input")
           .on("change", function () {
             continents_selected = d3.selectAll("#multiple_select input")
                                     .filter(function () {
-                                        return d3.select(this).property('checked') == true;})[0]
+                                      return d3.select(this).property('checked') == true;})[0]
                                     .map(function (e) {
-                                        return d3.select(e).attr("name");  });
-            //console.log(continents_selected);  });
-            var filtered_data = json.filter(function (d){
-                                    //if no checkboxes are selected then show all countries
-                                    if (continents_selected.length==0){return true;}
-                                    //iterate through selected-continents list, see if match this 
-                                    //json object's "continent" property
-                                    var judge = false;
-                                    continents_selected.forEach(function(contin_ele){
-                                        if (d["continent"]==contin_ele) {
-                                          //so long as one element matches, show the json obj
-                                          judge = true;
-                                          return;
-                                        }  
-                                    });
-                                    return judge;  
-                                  });
-            console.log(filtered_data);
-            update(filtered_data);  // Update the chart with the filtered data
-          })
-            //console.log(filtered_data);  
-
-
-
-/*            d3.select("#Americas").on("change", function () {
-                        // This will be triggered when the user selects or unselects the checkbox
-
-                        if (d3.select(this).property('checked') == true) {
-                            // Checkbox was just checked
-
-                            var filtered_data = json.filter(function (d) {
-                                // Keep only data element whose country is US
-                                return d["continent"] == "Americas";
-                            })
-                            console.log(filtered_data);
-                            update(filtered_data);  // Update the chart with the filtered data
-                        } else {
-                            // Checkbox was just unchecked
-                            update(json);  // Update the chart with all the data we have
-                        }
-                    }); */
-
-
-                                                                                      //enter rows->
+                                      return d3.select(e).attr("name");});
+            console.log(continents_selected);  });
+        //////////////////////////////////////////////////////////////////////////////enter rows->
         var rows = tbody.selectAll("tr.row")
                         .data(json)
                         .enter()
                         .append("tr")
                         .attr("class", "row")
                         .style("background-color", function (d, i) {
-                            if (i % 2 == 0)
-                                return "#FFCFCF";
-                            else
-                                return "white";})
+                          if (i % 2 == 0)
+                            return "#FFCFCF";
+                          else
+                            return "white";})
                         .on("mouseover", function () {
-                            d3.select(this)
-                              .style("background-color", "#FF6699")})
+                          d3.select(this)
+                            .style("background-color", "#FF6699")})
                         .on("mouseleave", function (d, i) {
-                            d3.select(this).style("background-color", function () {
-                                if (i % 2 == 0)
-                                  return "#FFCFCF";
-                                else
-                                  return "white";}) });
+                          d3.select(this).style("background-color", function () {
+                            if (i % 2 == 0)
+                              return "#FFCFCF";
+                            else
+                              return "white";}) });
         var cells = rows.selectAll("td")
                         .data(function (row) {
-                            return d3.range(Object.keys(row).length)
-                                      .map(function (column, i) {
-                                          return row[Object.keys(row)[i]];  }); })
+                          return d3.range(Object.keys(row).length)
+                                   .map(function (column, i) {
+                                      return row[Object.keys(row)[i]];  }); })
                         .enter()
                         .append("td")
                         .text(function (d) { return d; });
-                                                                                   //update rows->
+        //////////////////////////////////////////////////////////////////////////update rows->
         function update(some_data) {
           tbody.selectAll("tr.row").remove();
           var update_rows = tbody.selectAll("tr.row")
@@ -168,7 +128,7 @@
                                 .enter()
                                 .append("td")
                                 .text(function (d) { return d; });  
-        }})
+        }}
     </script> 
   </body>
 </html>
