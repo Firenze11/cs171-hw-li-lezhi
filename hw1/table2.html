@@ -15,9 +15,13 @@
         <label><input type="radio" name="details" value="1" id="non_aggr">None  </label>
         <label><input type="radio" name="details" value="1" id="contin_aggr">By Continent  </label>
       </div>
+      <strong>Time Update:</strong>
+      <label>1995</lable>
+      <input type="range" name="points" min="1995" max="2012" step="1" value="0" id="slider" oninput=";">
+      <label>2012</lable>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script>
-      var columnAscend = [false,false,false,false,false,false,false,false,false,];
+      var columnAscend = [false,false,false,false,false,false,false,false,false];
                                                                                        //load data->
       d3.json("data/countries_2012.json", function(error, data){
         var json = data;
@@ -90,7 +94,7 @@
                                     });
                                     return judge;  
                                   });
-            console.log(filtered_data);
+            //console.log(filtered_data);
             update(filtered_data);  // Update the chart with the filtered data
           })
                                                                                   //nest select->
@@ -104,7 +108,16 @@
                                   population: d3.sum(d, function(g) {return +g.population;})       
                               }; }) // Where aggregation happens
                               .entries(data);
-          console.log(nested_rows);
+          //console.log(nested_rows);
+          nested_rows=nested_rows.map(function(ob){
+                                    return {"alpha2_code":ob.key, 
+                                            "continent":ob.key, 
+                                            "gdp":ob.values.gdp, 
+                                            "life_expectancy": ob.values.life_expectancy,
+                                            "population":ob.values.population
+                                          }; 
+                                  });
+          //console.log(nested_rows);
           update(nested_rows);    
         }
 
@@ -115,7 +128,34 @@
             }
             else{update(json);}
           }); 
-
+                                                                                      //slider ->
+        d3.json("data/countries_1995_2012.json", function(error, data){
+            var timed_json = data;
+            //console.log(data);
+            d3.select("#slider")
+              .on("input",function(){
+                //console.log(d3.select(this).property('value'));
+                var yr=d3.select(this).property('value');
+                var d_by_yr=timed_json.map(function(ob){
+                                        var d_in_yr=ob.years.filter(function(ob_years){
+                                                              return ob_years.year ==yr;
+                                                            }) [0];
+                                        return{
+                                          "alpha2_code": ob.alpha2_code, 
+                                          "continent": ob.continent, 
+                                          "gdp": d_in_yr.gdp, 
+                                          "latitude": ob.latitude,
+                                          "life_expectancy": d_in_yr.life_expectancy,
+                                          "longitude": ob.longitude,
+                                          "name": ob.name,
+                                          "population": d_in_yr.population,
+                                          "year":yr,
+                                        }
+                                      });
+                //console.log(d_by_yr); 
+                update(d_by_yr);
+              });
+        });          
                                                                                       //enter rows->
         var rows = tbody.selectAll("tr.row")
                         .data(json)
@@ -170,6 +210,7 @@
 
           var cells = update_rows.selectAll("td")
                                 .data(function (row) {
+                                  //console.log(Object.keys(row));
                                   return d3.range(Object.keys(row).length)
                                           .map(function (column, i) {
                                             return row[Object.keys(row)[i]];  });  })
