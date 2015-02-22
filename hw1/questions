@@ -1,0 +1,63 @@
+Question 1.1: Looking at the page containing the table, what are the differences between the DOM as shown by the DOM inspector and the HTML source code? Why would you use the DOM inspector? When is the HTML source useful?
+
+A: DOM is HTML source modified my javascript. I use DOM to see whether javascript correctly modifies the HTML structure. HTML source is useful for examining the initial status of a webpage.
+
+
+Question 1.2: Below we have partially reproduced the first lines from the table's dataset. What piece of software generates this table? Where are the original data stored?
+
+A: The browser generates the table. Data is stored in a different file on the server.
+
+
+Question 2.1: Would you filter other columns from the table the same way? E.g. would you use checkboxes or any other HTML widget?
+
+A: I probably won't because it doesn't make much sense in terms of comparison.
+
+
+Question 3.1: Could you aggregate the table using other columns? If you think yes, explain which ones and how you would group values. Which HTML widgets would be appropriate?
+
+A: I can aggregate data from countries from the northern and southern semispheres using radio inputs.
+
+
+Question 4.1 What does the new attribute years hold?
+
+A: A list of json objects.
+
+
+Question 5.1 What are the pros and cons of using HTML vs. SVG? Give some examples in the context of creating visualizations.
+
+A: HTML table shows more dimensions of data simultaneously, whereas svg is more readable because of its grafic quality.
+
+
+Question 7.1 Give an example of a situation where visualization is appropriate, following the arguments discussed in lecture and in the textbook (the example cannot be the same as mentioned in either lecture or textbook).
+
+A: Where a scientific experiment result may be relevant to a lot of different conditions, in which case we can visualize the intensity of different conditions as related to the significance of the result in each experiment.
+
+
+Question 7.2 Which limitations of static charts can you solve using interactivity?
+
+A: Can't show the development of some data over time; Can't keep the information concise while allowing the possibility for readers to explore details as the same time. 
+
+
+Question 7.3 What are the limitations of visualization?
+
+A: When there is a clear question to answer, it's not suitable for visualization. Also, visualization may not be able to convey detailed or precise information in some cases.
+
+
+Question 7.4 Why are data semantics important for data?
+
+A: Data semantics is the study of the meaning and use of specific pieces of data, with which we can know which visual qualities should be assiciated with which type of data.
+
+
+Question 7.5 Which relationships are defined for two attributes of (a) quantitative, (b) categorical, or (c) ordinal scale?
+
+A: a) how much one attribute is larger or smaller than another
+   b) whether they are of the same category
+   c) sequence of the two attributes
+
+Question 7.6 Which visual variables are associative (i.e., allow grouping)?
+
+A: Color, position...
+
+Question 7.7 Which visual variables are quantitative (i.e., allow to judge a quantitative difference between two data points)?
+
+A: Area, length...
