@@ -60,12 +60,19 @@
     d3.json("data/countries_1995_2012.json", function(data) {
         
         //console.log(data);
-        var max = d3.max(data, function(d) { return d.population; } );
-        var min = 0;
-        xScale.domain([min, max]);
-        yScale.domain(data.map(function(d) { return d.name; })  );
+
                                                                                             //update->
         function update(some_data){
+
+            var max = d3.max(some_data, function(d) { 
+                            if(d3.select("#pop_encode").property('checked')){  
+                                return d.population;  }
+                            else{ return d.gdp;  } 
+                        } );
+            var min = 0;
+            xScale.domain([min, max]);
+            yScale.domain(some_data.map(function(d) { return d.name; })  );
+
             g.selectAll("g.row").remove();
             var rows = g.append("g")
                         .selectAll("g.row")
@@ -75,14 +82,19 @@
                         .attr("class", "row");
        
             var bars=rows.append("rect")
-                        .attr("width", function(d) { 
-                            if(d3.select("#pop_encode").property('checked')==true){           //encode
-                                return xScale(d.population);  }
+
+                        .attr("width", function(row_data) {
+                            //console.log(row_data); 
+                            //console.log(d3.select("#pop_encode").property('checked')==true);
+                            if(d3.select("#pop_encode").property('checked')){           //encode
+                                console.log(row_data.population);
+                                return xScale(row_data.population);  }
                             else{
-                                return xScale(d.gdp);  } })
+                                return xScale(row_data.gdp);  } })
+
                         .attr("height", 5)
                         .attr("x", xScale(min))
-                        .attr("y", function(d) { return yScale(d.name); });
+                        .attr("y", function(row_data) { return yScale(row_data.name); });
         }
     
         //visualization is refreshed on every update
@@ -138,11 +150,12 @@
                             .key(function(d) { return d.continent; })
                             .rollup(function(d) { 
                                 return {
+                                    year:yr,
                                     gdp:d3.sum(d,function(g) {
                                         return +g.gdp;}),
-                                    population: d3.sum(d, function(g) {
+                                    population: d3.sum(json, function(g) {
                                         return +g.population;})  }; }) // Where aggregation happens
-                            .entries(data);
+                            .entries(json);
                 //console.log(nested_d);
                 json=nested_d.map(function(ob){
                                 return {"name":ob.key, 
@@ -152,7 +165,7 @@
                                         "year": ob.values.year
                                        }; 
                                 });
-                console.log(json);
+                //console.log(json);
             }
                 
 
@@ -162,10 +175,10 @@
                     return d3.descending(a.population, b.population);  });  }
             else {
                 json = json.sort(function (a, b) {
-                    return d3.descending(a.gdp, b.gdp);  });  }
-
-            //console.log(json);
-            //update(json);
+                    return d3.descending(a.gdp, b.gdp);  });
+            }
+            console.log(json);  
+            update(json);
         });
 });
      //}
