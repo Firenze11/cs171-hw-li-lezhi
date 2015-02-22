@@ -95,6 +95,13 @@
                         .attr("height", 5)
                         .attr("x", xScale(min))
                         .attr("y", function(row_data) { return yScale(row_data.name); });
+
+            var lbs=rows.append("label")
+                        .attr("text",function(row_data){return row_data.name;})
+                        .attr("width", 100)
+                        .attr("hight", 5)
+                        .attr("x", xScale(min)+10)
+                        .attr("y", function(row_data) { return yScale(row_data.name) +10; });
         }
     
         //visualization is refreshed on every update
