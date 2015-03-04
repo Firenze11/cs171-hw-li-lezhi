@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Homework 2 Graph</title>
+<style>
+  .link {
+    stroke: gray;
+    stroke-width: .7px;
+  }
+  .node {
+    fill: white;
+    stroke: #000;
+    stroke-width: .9px;
+  }
+  .node:hover {
+    fill: black;
+  }
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<form>
+Layout:
+  <label><input type="radio" name="layout" value="force" checked> Force</label>
+  <label><input type="radio" name="layout" value="geography"> Geography</label>
+  <label><input type="radio" name="layout" value="circular"> Circular</label>
+</form>
+<form>
+Size:
+  <label><input type="radio" name="size" value="nosize" > None</label>
+  <label><input type="radio" name="size" value="size_pop" > Population</label>
+  <label><input type="radio" name="size" value="size_gdp" checked> GDP</label>
+</form>
+<form>
+Color:
+  <label><input type="radio" name="color" value="nocolor" checked> None</label>
+  <label><input type="radio" name="color" value="col_ctn"> Continent</label>
+</form>
+<form>
+Time:
+  <label> 1995
+  <input type="range" name="time" min="1995" max="2012" step="1" value="0" oninput=";"> 
+  2012</label>
+</form>
+<script>
+var margin = {top: 0, bottom: 50, left: 0, right: 40};
+var width = 1500 - margin.left - margin.right;
+var height = 600 - margin.top - margin.bottom;
+var svg = d3.select("body")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+//var fill = d3.scale.category10();
+var graph = {nodes: [], links: []};
+                                                                                //plot map
+var projection = d3.geo.equirectangular()
+    .scale(200)
+    .translate([width / 2, height / 2])
+    .precision(.1);
+    /*
+var path = d3.geo.path()
+    .projection(projection);
+var graticule = d3.geo.graticule();
+/*
+svg.append("path")
+    .datum(graticule)
+    .attr("class", "graticule")
+    .attr("d", path);
+d3.csv("data/world-country-boundaries.csv", function(error, world) {
+  console.log(world);
+  /*svg.insert("path", ".graticule")
+      .datum(topojson.feature(world, world.objects.land))
+      .attr("class", "land")
+      .attr("d", path);
+  svg.insert("path", ".graticule")
+      .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+      .attr("class", "boundary")
+      .attr("d", path);
+}); 
+d3.select(self.frameElement).style("height", height + "px");
+*/
+
+d3.json("data/countries_1995_2012.json",function(error,data){
+  var json;
+  json = data;
+                                                                                   //control
+  d3.select("input[value=\"force\"]").on("click", force_layout);
+  d3.select("input[value=\"geography\"]").on("click", geography_layout);
+  //d3.select("input[value=\"circular\"]").on("click", circular_layout);
+  d3.select("input[value=\"nosize\"]")
+    .on("click", function() {
+      d3.selectAll("circle")
+        .transition()
+        .duration(500)
+        .attr("r", 3);  })
+  d3.select("input[value=\"size_gdp\"]").on("click", gdp_size);
+  //d3.select("input[value=\"size_pop\"]").on("click", pop_size);
+  d3.select("input[value=\"nocolor\"]")
+    .on("click", function() {
+      d3.selectAll("circle")
+        .transition()
+        .duration(500)
+        .style("fill", "white");  })
+  //d3.select("input[value=\"col_ctn\"]").on("click", continent_color);
+                                                                         //create lks & nds data
+  graph.nodes = json.map(function(ob) {
+                      yr=d3.select("input[name=\"time\"]").property('value'); 
+                      ////syntax!! why not xxx.value?????????///// 
+                      var d_in_yr =ob.years.filter(function(ob_ys){
+                                              return ob_ys.year ==yr;
+                                            }) [0];
+                      return {
+                        "country_id":ob.country_id,
+                        "name": ob.name,
+                        "continent": ob.continent,
+                        "latitude":ob.latitude,
+                        "longitude":ob.longitude, 
+                        "gdp": d_in_yr.gdp, 
+                        "population": d_in_yr.population,
+                        "partners":d_in_yr.top_partners,
+                        "year":yr,
+                      };  
+                    });
+  graph.nodes.forEach(function(s,i) { //add links
+      s.partners.forEach(function(p) {
+          graph.nodes.forEach(function(t,j){
+              if(p.country_id==t.country_id){
+                  graph.links.push({"source": i, "target": j})}
+  })  })  });
+                                                                   //add force
+  var force = d3.layout.force()
+                        .size([width, height])
+                        .charge(-950)
+                        .linkDistance(10)
+                        .on("tick", tick);
+                        //.on("start", function(d) {})//////////what's the function???????
+                        //.on("end", function(d) {});
+                                                                 //create lks & nds geometry
+  var link = svg.selectAll(".link").data(graph.links);
+  link.enter()
+      .append("line")
+      .attr("class","link");
+  //link.attr("x1", "")////////////////////////////
+  link.exit().remove();
+
+  var node = svg.selectAll(".node").data(graph.nodes);
+  node.enter()
+      .append("g")
+      .attr("class","node");
+  node.append("circle")
+      .attr("r", 3)////////////////////////////////
+      .call(force.drag);///////////////////////////
+  var title = node.append("text")
+                  .text(function(d) { return d.name; })
+                  .attr("x",function(d) { return (d.x + 10); })
+                  .attr("y",function(d) { return (d.y + 10); })
+                  .attr("dy", ".35em");
+  node.exit().remove();
+                                                                    //bind force to data
+  /*force.nodes(graph.nodes)
+        .links(graph.links)
+        .start();
+  */
+  function tick(d) {
+    graph_update(0);
+  }
+  function graph_update(duration) {
+    link.transition()
+        .duration(duration)
+        .attr("x1", function(d) { return d.target.x; })
+        .attr("y1", function(d) { return d.target.y; })
+        .attr("x2", function(d) { return d.source.x; })
+        .attr("y2", function(d) { return d.source.y; });
+    node.transition()
+        .duration(duration)
+        .attr("transform", function(d) { 
+          return "translate("+d.x+","+d.y+")";  });
+  }
+                                                           //command-listening functions
+  function geography_layout(){
+    force.stop();
+    graph.nodes.forEach(function(d){
+      var coor = projection([d.longitude,d.latitude]);
+      console.log(coor);
+      d.x=coor[0];
+      d.y=coor[1];
+      graph_update(500);
+    })
+  }
+  function force_layout() {
+    force.nodes(graph.nodes)
+          .links(graph.links)
+          .start();
+  }
+  function gdp_size() {
+    var max = d3.max( graph.nodes.map(function(e){ return e.gdp; }) );
+    var min = d3.min( graph.nodes.map(function(e){ return e.gdp; }) );
+    console.log(max, min);
+    var gdp_scale = d3.scale
+                      .linear()
+                      .domain([min, max])
+                      .range([4, 625]);
+    d3.selectAll("circle").transition()
+                          .duration(500)
+                          .attr("r", function(d) { 
+                            return Math.sqrt(gdp_scale(d.gdp));  });
+  }
+  function pop_size() {
+    var max = d3.max(graph.nodes, function(d) {
+                      return d3.max(d.population, function(e) {
+                                   return d3.max(e); }); });
+    var min = d3.min(graph.nodes, function(d) {
+                      return d3.min(d.population, function(e) {
+                                   return d3.min(e); }); });
+    var pop_scale = d3.scale
+                  .linear()
+                  .domain([min, max])
+                  .range([3, 200]);
+    d3.selectAll("circle").transition()
+                          .duration(500)
+                          .attr("r", function(d) { 
+                            return Math.sqrt(gdp_scale(d.gdp));  });
+  }
+})
+
+/*
+function circular_layout() {//still need to study
+  force.stop();
+  var r = Math.min(height, width)/2;
+  var arc = d3.svg.arc()
+                  .outerRadius(r);
+  var pie = d3.layout.pie()
+                    // Sorting by categories
+                    .sort(function(a, b) { return a.cat - b.cat;}) 
+                    // We want an equal pie share/slice for each point
+                    .value(function(d, i) { return 1;  });
+
+  graph.nodes = pie(graph.nodes).map(function(d, i) {
+    // Needed to caclulate the centroid
+                                  //console.log(pie(graph.nodes));
+                                  d.innerRadius = 0;
+                                  d.outerRadius = r;
+    // Building the data object we are going to return
+                                  d.data.x = arc.centroid(d)[0]+width/2;
+                                  d.data.y = arc.centroid(d)[1]+height/2;
+                                  console.log(arc.centroid(d));
+                                  //console.log(d);
+                                  return d.data;  });
+  graph_update(500);
+}
+function category_color() {
+  d3.selectAll("circle").transition()
+                        .duration(500)
+                        .style("fill", function(d) { 
+                          return fill(d.cat);  });
+}
+var link = svg.selectAll(".link")
+              .data(graph.links);
+
+link.enter().append("line")
+            .attr("class", "link")
+
+var node = svg.selectAll(".node")
+              .data(graph.nodes)
+              .enter()
+              .append("g")
+              .attr("class", "node");
+
+node.append("circle")
+    .attr("r", 5)
+
+force_layout();
+*/
+
+</script>
+</body>
+</html>
