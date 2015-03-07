@@ -18,45 +18,10 @@
     fill: black;
     stroke: black;
   }
-  .node--text{
+  .node:text{
     size: 4px;
     fill: black;
   }
-
-.link {
-  stroke: steelblue;
-  stroke-opacity: .4;
-  fill: none;
-  pointer-events: none;
-}
-
-.node:hover,
-.node--source,
-.node--target {
-  font-weight: 700;
-}
-
-.node--source {
-  fill: #2ca02c;
-}
-
-.node--target {
-  fill: #d62728;
-}
-
-.link--source,
-.link--target {
-  stroke-opacity: 1;
-  stroke-width: 2px;
-}
-
-.link--source {
-  stroke: #d62728;
-}
-
-.link--target {
-  stroke: #2ca02c;
-}
 </style>
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -76,16 +41,14 @@
   </select>
 </div>
 </form>
-<script>
-//<label><input type="radio" name="layout" value="force" onclick="force_layout();"> Force</label>
-/*
 <form>
 Time:
   <label> 1995
   <input type="range" name="time" min="1995" max="2012" step="1" value="2012" oninput="time_update(this.value);"> 
   2012</label>
 </form>
-*/
+<script>
+//<label><input type="radio" name="layout" value="force" onclick="force_layout();"> Force</label>
 var margin = {top: 0, bottom: 50, left: 0, right: 40};
 var width = 1400 - margin.left - margin.right;
 var height = 700 - margin.top - margin.bottom;
@@ -177,9 +140,7 @@ function create_graph_geom(){                                      //create lks 
   node = svg.selectAll(".node").data(graph.nodes);
   node.enter()
       .append("g")
-      .attr("class","node")
-      .on("mouseover", mouseovered)
-      .on("mouseout", mouseouted);
+      .attr("class","node");
   node.append("circle")
       .attr("r", 5);
       //.call(force.drag);
@@ -191,30 +152,6 @@ function create_graph_geom(){                                      //create lks 
                   .attr("dy", ".15em");
   node.exit().remove();
 } 
-function mouseovered(d) {
-  node
-      .each(function(n) { n.target = n.source = false; });
-
-  link
-      .classed("link--target", function(l) { if (l.target === d) return l.source.source = true; })
-      .classed("link--source", function(l) { if (l.source === d) return l.target.target = true; })
-    .filter(function(l) { return l.target === d || l.source === d; })
-      .each(function() { this.parentNode.appendChild(this); });
-
-  node
-      .classed("node--target", function(n) { return n.target; })
-      .classed("node--source", function(n) { return n.source; });
-}
-
-function mouseouted(d) {
-  link
-      .classed("link--target", false)
-      .classed("link--source", false);
-
-  node
-      .classed("node--target", false)
-      .classed("node--source", false);
-}
 /*
 function tick(d) {
   graph_update(0);

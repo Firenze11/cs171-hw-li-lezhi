@@ -18,45 +18,10 @@
     fill: black;
     stroke: black;
   }
-  .node--text{
+  .node:text{
     size: 4px;
     fill: black;
   }
-
-.link {
-  stroke: steelblue;
-  stroke-opacity: .4;
-  fill: none;
-  pointer-events: none;
-}
-
-.node:hover,
-.node--source,
-.node--target {
-  font-weight: 700;
-}
-
-.node--source {
-  fill: #2ca02c;
-}
-
-.node--target {
-  fill: #d62728;
-}
-
-.link--source,
-.link--target {
-  stroke-opacity: 1;
-  stroke-width: 2px;
-}
-
-.link--source {
-  stroke: #d62728;
-}
-
-.link--target {
-  stroke: #2ca02c;
-}
 </style>
 <body>
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -65,10 +30,11 @@
   <div>
   Layout:
     <label><input type="radio" name="layout" value="geography" checked onclick="geography_layout();" checked> Geography</label>
-    <label><input type="radio" name="layout" value="circular" onclick="circular_prepare();"> Circular</label>
     <label><input type="radio" name="layout" value="multi-foci" onclick="multifoci_prepare();"> Multi-foci</label>
+    <label><input type="radio" name="layout" value="circular" onclick="circular_prepare();"> Circular</label>
     <label><input type="radio" name="layout" value="ranking" onclick="rank_prepare();"> Ranking</label>
     <label><input type="radio" name="layout" value="scatterplot" onclick="scatter_layout();"> Scatterplot</label>
+    <label><input type="radio" name="layout" value="force" onclick="force_layout();"> Force</label>
   </div>
   <div>  
   Layout options:
@@ -76,16 +42,13 @@
   </select>
 </div>
 </form>
-<script>
-//<label><input type="radio" name="layout" value="force" onclick="force_layout();"> Force</label>
-/*
 <form>
 Time:
   <label> 1995
   <input type="range" name="time" min="1995" max="2012" step="1" value="2012" oninput="time_update(this.value);"> 
   2012</label>
 </form>
-*/
+<script>
 var margin = {top: 0, bottom: 50, left: 0, right: 40};
 var width = 1400 - margin.left - margin.right;
 var height = 700 - margin.top - margin.bottom;
@@ -99,21 +62,9 @@ var graph = {nodes: [], links: []};
 var link;
 var node;
                                                              //add force
-var  force = d3.layout.force()
-                      .size([width, height])
-                      //.charge(-950)
-                      .charge(-500)
-                      .linkDistance(10);
-                      //.on("tick", tick2);
+var  force;
                       //.on("start", function(d) {})//////////what's the function???????
                       //.on("end", function(d) {}); 
- /*force .links([])////////////////////////////////////////////////////////////////////////////////////////////////////////
-        .nodes(graph.nodes)
-        .charge(-500)
-        .size([width, 900])
-        .on("tick", tick2)
-        .start();
-*/
                                                                                 //plot map
 var projection = d3.geo.equirectangular()
     .scale(200)
@@ -133,13 +84,18 @@ var vars = {
 d3.json("data/countries_1995_2012.json",function(error,data){
   all_data = data;
   create_graph();
-  create_graph_geom();
+  force = d3.layout.force()
+                  .size([width, height])
+                  .charge(-950)
+                  .linkDistance(10)
+                  .on("tick", tick)
+                  .nodes(graph.nodes)
+                  .links(graph.links);  
   geography_layout();
-  graph_update(1000);
 })
 function create_graph(){                                         //create lks & nds data
   graph.nodes = all_data.map(function(ob,i) {
-                      yr=2012;//d3.select("input[name=\"time\"]").property('value'); 
+                      yr=d3.select("input[name=\"time\"]").property('value'); 
                       var d_in_yr =ob.years.filter(function(ob_ys){
                                               return ob_ys.year == yr;
                                             }) [0];
@@ -157,17 +113,22 @@ function create_graph(){                                         //create lks & 
                     });
   graph.links=[];
   graph.nodes.forEach(function(s,i) { 
+    //if(i==18){console.log(s.partners);}
       s.partners.forEach(function(p) {
           graph.nodes.forEach(function(t,j){
               if(p.country_id==t.country_id){
                   graph.links.push({"source": i, "target": j})}
   })  })  });
-  force.nodes(graph.nodes)
-        .links(graph.links)
-        .start();
-}
-function create_graph_geom(){                                      //create lks & nds geometry
-
+  force = d3.layout.force()
+                  .size([width, height])
+                  .charge(-950)
+                  .linkDistance(10)
+                  .on("tick", tick)
+                  .nodes(graph.nodes)
+                  .links(graph.links)
+                  .start(); 
+                  console.log(graph.nodes) ;
+                                                                 //create lks & nds geometry
   link = svg.selectAll(".link").data(graph.links);
   link.enter()
       .append("line")
@@ -177,51 +138,20 @@ function create_graph_geom(){                                      //create lks 
   node = svg.selectAll(".node").data(graph.nodes);
   node.enter()
       .append("g")
-      .attr("class","node")
-      .on("mouseover", mouseovered)
-      .on("mouseout", mouseouted);
+      .attr("class","node");
   node.append("circle")
-      .attr("r", 5);
-      //.call(force.drag);
+      .attr("r", 5)
+      .call(force.drag);
   var title = node.append("text")
                   .text(function(d) { return d.name; })
-                  .attr("x", "6" )
-                  .attr("y","2")
+                  .attr("x",function(d) { console.log(d.x); return (d.x + 1); })
+                  .attr("y",function(d) { return (d.y - 1); })
                   .attr("size","2px")
                   .attr("dy", ".15em");
   node.exit().remove();
 } 
-function mouseovered(d) {
-  node
-      .each(function(n) { n.target = n.source = false; });
-
-  link
-      .classed("link--target", function(l) { if (l.target === d) return l.source.source = true; })
-      .classed("link--source", function(l) { if (l.source === d) return l.target.target = true; })
-    .filter(function(l) { return l.target === d || l.source === d; })
-      .each(function() { this.parentNode.appendChild(this); });
-
-  node
-      .classed("node--target", function(n) { return n.target; })
-      .classed("node--source", function(n) { return n.source; });
-}
-
-function mouseouted(d) {
-  link
-      .classed("link--target", false)
-      .classed("link--source", false);
-
-  node
-      .classed("node--target", false)
-      .classed("node--source", false);
-}
-/*
 function tick(d) {
   graph_update(0);
-}
-*/
-function add_line(){
-
 }
 function graph_update(duration) {
   link.transition()
@@ -237,6 +167,7 @@ function graph_update(duration) {
                                                                      //commend listening
 function time_update() {
     create_graph();
+    //console.log(graph.links[98].target);
     create_graph_geom();
     graph_update(0);
 }
@@ -253,8 +184,10 @@ function multifoci_layout(op){
   var multifoci_scale = d3.scale.ordinal()
                           .domain(["Asia","Africa","Europe","Americas","Oceania"])
                           .range(d3.range(0,5));
-  force .links([])////////////////////////////////////////////////////////////////////////////////////////////////////////
+  force .links([])
         .nodes(graph.nodes)
+        .charge(-500)
+        .size([width, 900])
         .on("tick", tick2)
         .start();
   var ctns = ["Asia","Africa","Oceania","Europe","Americas"];
@@ -288,14 +221,28 @@ function multifoci_layout(op){
     }
     else if (op == "cir") {
       graph.nodes.forEach(function(d, i) {
-        var xpos = centers[multifoci_scale(d.continent)][0]*1.3 -220;
-        var ypos = centers[multifoci_scale(d.continent)][1] * 0.4 +160;
+        var xpos = centers[multifoci_scale(d.continent)][0];
+        var ypos = centers[multifoci_scale(d.continent)][1] * 0.4 +150;
         d.x += (xpos-d.x)*k;
         d.y += (ypos-d.y)*k;
       })
     }
     graph_update(0);
   }
+    /*centers = pie(ctns).map(function(d, i) {
+                                    d.innerRadius = 0;
+                                    d.outerRadius = 2*r;
+                                    var ctnx = arc.centroid(d)[0]+width/2;
+                                    var ctny = arc.centroid(d)[1]+height/2;
+                                    return [ctnx,ctny];  });
+    );
+  }
+  function mousedown() {
+    nodes.forEach(function(o, i) {
+      o.x += (Math.random() - .5) * 40;
+      o.y += (Math.random() - .5) * 40;
+    });
+  }*/
 }
 function rank_prepare(){
   var ddb = d3.select("#lay_op");
@@ -335,6 +282,7 @@ function rank_layout(op,sc){
   }
   else if (op == "gdp") { 
     domain_list=graph.nodes.sort(function(a,b){return a.gdp-b.gdp; });
+    graph.nodes.forEach(function(d){console.log(d.gdp) ;} );
     if (sc =="ln"){
       rank_scale=d3.scale.linear()
                     .domain([domain_list[0].gdp,domain_list[num].gdp])
@@ -376,7 +324,7 @@ function geography_layout(){
   force.stop();
   graph.nodes.forEach(function(d){
     var coor = projection([d.longitude,d.latitude]);
-    d.x=coor[0]; 
+    d.x=coor[0];
     d.y=coor[1];
   })
   graph_update(1500);
@@ -408,6 +356,7 @@ function circular_layout(op) {
                                     d.data.y = arc.centroid(d)[1]+height/2;
                                     return d.data;  });
   } else if(op == "mult"){
+    //force.stop();
     var ctns = ["Asia","Africa","Europe","Americas","Oceania"];
     var r = Math.min(height, width)/2;
     var centers = [];
@@ -439,18 +388,15 @@ function circular_layout(op) {
   }
   graph_update(1500);
 }
-/*
 function force_layout() {
   d3.selectAll("#lay_op option").remove();
-  force.nodes(graph.nodes)
-        .links(graph.links)
-        .start();
+  force.start();
         //graph.nodes.forEach(function(e){console.log(e.x);});
 }
-*/
 function gdp_size() {
   var max = d3.max( graph.nodes.map(function(e){ return e.gdp; }) );
   var min = d3.min( graph.nodes.map(function(e){ return e.gdp; }) );
+  console.log(max, min);
   var gdp_scale = d3.scale
                     .linear()
                     .domain([min, max])
