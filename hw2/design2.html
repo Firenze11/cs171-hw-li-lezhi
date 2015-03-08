@@ -74,6 +74,8 @@
     <label><input type="radio" name="layout" value="geography" checked onclick="geography_layout();" checked> Geography</label>
     <label><input type="radio" name="layout" value="circular" onclick="circular_prepare();"> Circular</label>
     <label><input type="radio" name="layout" value="multi-foci" onclick="multifoci_prepare();"> Multi-foci</label>
+    <label><input type="radio" name="layout" value="ranking" onclick="rank_prepare();"> Ranking</label>
+    <label><input type="radio" name="layout" value="scatterplot" onclick="scatter_layout();"> Scatterplot</label>
   </div>
   <div>  
   Layout options:
@@ -199,13 +201,13 @@ function create_graph_geom(){                                      //create lks 
   node = svg.selectAll(".node").data(graph.nodes);
   node.enter()
       .append("g")
-      .attr("class","node")
-      .on("mouseover", mouseovered)
-      .on("mouseout", mouseouted);
+      .attr("class","node");
       //.on("mouseover", mouseovered)
       //.on("mouseout", mouseouted);
   node.append("circle")
-      .attr("r", 5);
+      .attr("r", 5)
+      .on("mouseover", mouseovered)
+      .on("mouseout", mouseouted);
       //.call(force.drag);
   var title = node.append("text")
                   .attr("class","node--t")
@@ -229,14 +231,10 @@ function mouseovered(d) {
       //console.log(d3.selectAll("link"));
   node.classed("node--target", function(n) { return n.target; })
       .classed("node--source", function(n) { return n.source; });
-  d3.select(this).select("text").attr("class","node--t--on");
-  console.log(d3.select(this));
   d3.selectAll(".node--target").select("text").attr("class","node--t--on");
   d3.selectAll(".node--source").select("text").attr("class","node--t--on");
 }
 function mouseouted(d) {
-  d3.select(this).select("text").classed("node--t--on",false)
-                                .attr("class","node--t");
   d3.selectAll(".node--target").select("text").classed("node--t--on",false)
                                               .attr("class","node--t");
   d3.selectAll(".node--source").select("text").classed("node--t--on",false)
