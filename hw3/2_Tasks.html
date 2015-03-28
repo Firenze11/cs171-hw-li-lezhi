@@ -43,10 +43,12 @@
             // you might make use of the map and filter functions
             // HINT: javascript Date objects are comparable !!
             // see: http://www.w3schools.com/js/js_date_methods.asp
-
             // after you assigned a value to the count variable
             // this function checks if your count is correct
             // you need an active internet connection for this to work
+            var count = allData.filter(function(e){ return (from <= e.time && to >=e.time); })
+                               .map(function(e){ return e.count; }) 
+                               .reduce(function(a, b) { return a + b; });
             cs171Test.checkCount(count);
         }
         function allLoaded(perDay,meta){
