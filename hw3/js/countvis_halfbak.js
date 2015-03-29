@@ -19,9 +19,9 @@ CountVis = function(_parentElement, _data, _metaData, _eventHandler){
     this.eventHandler = _eventHandler;
     this.displayData = [];
     // TODO: define all "constants" here
-    this.margin = {top: 20, right: 10, bottom: 30, left: 50},///////////////
-    this.width=750-this.margin.left-this.margin.right;//getHtWd(this.parentElement,"width")-this.margin.left-this.margin.right,
-    this.height=350-this.margin.left-this.margin.right;//getHtWd(this.parentElement,"height")-this.margin.top-this.margin.bottom;
+    this.margin = {top: 20, right: 0, bottom: 30, left: 30},///////////////
+    this.width = getInnerWidth(this.parentElement) - this.margin.left - this.margin.right,///////////////
+    this.height = 400 - this.margin.top - this.margin.bottom;///////////
     this.initVis();
 }
 /* Method that sets up the SVG and the variables */
@@ -36,7 +36,7 @@ CountVis.prototype.initVis = function(){
     // --- ONLY FOR BONUS ---  implement zooming
 
     // TODO: modify this to append an svg element, not modify the current placeholder SVG element
-    this.svg = this.parentElement//.select("svg")
+    this.svg = this.parentElement.select("svg")
                   .append("svg")
                   .attr("width", this.width + this.margin.left + this.margin.right)
                   .attr("height", this.height + this.margin.top + this.margin.bottom)
@@ -57,7 +57,6 @@ CountVis.prototype.initVis = function(){
                       .y0(this.height)
                       .y1(function(d) { return that.y(d.count); });
     this.brush = d3.svg.brush()
-                       .x(this.x)
                        .on("brush", function(){ console.log(that.brush.extent()); });
     // Trigger selectionChanged event. You'd need to account for filtering by time AND type
     // Add axes visual elements
@@ -72,8 +71,6 @@ CountVis.prototype.initVis = function(){
             .attr("dy", ".71em")
             .style("text-anchor", "end")   //???????????????????????????
             .text("Vote count, daily");
-    this.svg.append("g")
-            .attr("class", "brush");
     //TODO: implement the slider -- see example at http://bl.ocks.org/mbostock/6452972
     this.addSlider(this.svg)
     // filter, aggregate, modify data
@@ -120,7 +117,7 @@ CountVis.prototype.updateVis = function(){
 CountVis.prototype.onSelectionChange= function (selectionStart, selectionEnd){
   // TODO: call wrangle function
   // do nothing -- no update when brushing
-  this.wrangleData(function(d) {return selectionStart<=d.time && selectionEnd>=d.time; });
+  this.wrangleData(function(d) { return selectionStart<=d.time && selectionEnd>=d.time; });
   //this.updateVis(); //////////////////////////////////////
 }
 /* ==================================
@@ -160,11 +157,6 @@ CountVis.prototype.addSlider = function(svg){
                                       ry:2 })
                               .style({fill:"#333333"})
                               .call(sliderDragBehaviour)
-}
-//get height or width of a given element
-var getHtWd = function(element,str_property) {   
-    var style = window.getComputedStyle(element.node(), null);
-    return parseInt(style.getPropertyValue(str_property));
 }
 
 

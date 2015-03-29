@@ -63,6 +63,8 @@ VolumeVis.prototype.initVis = function(){
       .y1(function(d) { return that.y(d.calls.length); });
 
     this.brush = d3.svg.brush()
+      .x(this.x)
+      //.extent([0, 0])
       .on("brush", function(){
         // Trigger selectionChanged event. You'd need to account for filtering by time AND type
         console.log(that.brush.extent());

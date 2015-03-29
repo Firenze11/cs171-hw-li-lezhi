@@ -7,7 +7,6 @@
     <script src="libs/d3/d3.min.js" charset="utf-8"></script>
     <script src="libs/jquery/jquery-2.1.1.min.js" charset="utf-8"></script>
     <script src="libs/bootstrap/js/bootstrap.min.js" charset="utf-8"></script>
-    <script src="libs/d3/queue.min.js"></script>
     <!--Stylesheets-->
     <link rel="stylesheet" type="text/css" href="libs/bootstrap/css/bootstrap.min.css">
     <!-- Get some nice font-->
@@ -41,9 +40,9 @@
         <div class="row">
             <div class="col-md-9" id="countVis">
                 <!-- TODO: delete placeholder svg element -->
-                <!--<svg width="650" height="330" style="background-color: lightblue">
+                <svg width="650" height="330" style="background-color: lightblue">
                     <text x="50" y="50">HERE should be CountVis</text>
-                </svg>-->
+                </svg>
             </div>
             <div class="col-md-3" id="ageVis">
                 <!-- TODO: delete placeholder svg element -->
@@ -78,7 +77,6 @@
                 //TODO: Create an eventHandler  --> DONE :)
                 var MyEventHandler = new Object();
                 //TODO: Instantiate all Vis Objects here
-                var myCountvis = new CountVis(d3.select("#countVis"),allData, metaData, MyEventHandler);
                 // TODO: bind the eventHandler to the Vis Objects
                 // events will be created from the CountVis object (nothing to do here)
                 // events will be consumed by the PrioVis and AgeVis object (binding should happen here)
@@ -102,16 +100,14 @@
                                     count: parseInt(d["count(*)"])
                                 };
                                 // TODO: implement that  !!
-                                res.prios = []///////////////////////////////////////////////////////////////////////
+                                res.prios = []
                                 // should be an array of 16 numbers with the total count MAPping the prio values,
                                 //  [d["sum(p0)"], d["sum(p1)"], d["sum(p2)"],...]
                                 // Example:
                                 // [10,200,500,... ]
                                 // This is ONE way to create an array of length 100
                                 // and set every value to "0")
-                                res.ages = d3.range(0,100)
-                                             .map(function(){
-                                                return 0;}) //////////////////////////////////////////////////////////
+                                res.ages = d3.range(0,100). map(function(){return 0;})
                                 // TODO: Assign the count for each age to the index position
                                 // eg: res.ages[22] should contain the count value for age 22
                                 // BE AWARE THAT THE DATA MIGHT CONTAIN ages >99 which you have to handle especially
@@ -127,18 +123,12 @@
             var startHere = function(){
                 //TODO: load data here and call "dataLoaded" afterwards
                 // Hint: http://giscollective.org/d3-queue-js/
-                queue()
-                  .defer(d3.json, "data/perDayData.json") 
-                  .defer(d3.json, "data/MYWorld_fields.json") 
-                  .await(function(e,a,m) { return dataLoaded(e,a,m) ;}); 
                 // bind reset zoom button to a function (-- ONLY FOR BONUS --)
                 d3.select("#fitInBtn").on("click", function() {
                     // TODO: -- ONLY FOR BONUS --
                 });
             }
             startHere();
-            /*helper function*/
-            
         })
     </script>
 </body>
