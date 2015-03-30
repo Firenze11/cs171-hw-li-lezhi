@@ -41,15 +41,12 @@
         <div class="row">
             <div class="col-md-9" id="countVis">
                 <!-- TODO: delete placeholder svg element -->
-                <!--<svg width="650" height="330" style="background-color: lightblue">
-                    <text x="50" y="50">HERE should be CountVis</text>
-                </svg>-->
             </div>
             <div class="col-md-3" id="ageVis">
                 <!-- TODO: delete placeholder svg element -->
-                <svg width="230" height="330" style="background-color: lightcoral">
+                <!--<svg width="230" height="330" style="background-color: lightcoral">
                     <text x="50" y="50">HERE should be AgeVis</text>
-                </svg>
+                </svg>-->
             </div>
         </div>
         <div class="row">
@@ -86,7 +83,8 @@
                 // events will be consumed by the PrioVis and AgeVis object (binding should happen here)
                 $(MyEventHandler).bind("selectionChanged", function(event, _timeRange){
                    //myPrioVis.onSelectionChange(_timeRange);
-                   myAgeVis.onSelectionChange(_timeRange[0],_timeRange[1]);
+                   console.log(_timeRange);
+                   myAgeVis.onSelectionChange(_timeRange.start,_timeRange.end);
                 });
             }
 
@@ -95,36 +93,39 @@
                 if (!error) {
                     // make our data look nicer and more useful:
                     // per Day we want to have an object looking like this:
-                    /*
-                    * {
+                    /* {
                     *   time: .. (should be a Date object)
                     *   count: .. (number of all votes)
                     *   prios: [..,..,..,...] (array of number of votes per priority -> array length =16)
-                    *   ages: [..,..,..,..] (array counts of votes per age 0-99)
-                    * */
+                    *   ages: [..,..,..,..] (array counts of votes per age 0-99) */
                     allData = _allData.map(function (d) {
-                                var res = {
-                                    time: dateFormatter.parse(d.day),
-                                    count: parseInt(d["count(*)"])
-                                };
-                                // TODO: implement that  !!
-                                res.prios = []///////////////////////////////////////////////////////////////////////
-                                // should be an array of 16 numbers with the total count MAPping the prio values,
-                                //  [d["sum(p0)"], d["sum(p1)"], d["sum(p2)"],...]
-                                // Example:
-                                // [10,200,500,... ]
-                                // This is ONE way to create an array of length 100
-                                // and set every value to "0")
-                                res.ages = d3.range(0,100)
-                                             .map(function(){
-                                                return 0;}) //////////////////////////////////////////////////////////
-                                // TODO: Assign the count for each age to the index position
-                                // eg: res.ages[22] should contain the count value for age 22
-                                // BE AWARE THAT THE DATA MIGHT CONTAIN ages >99 which you have to handle especially
-                                // final result:
-                                // [0,0,0,..,1034,23,...] -- array length is 100
-                                return res;
+                            var res = {
+                                time: dateFormatter.parse(d.day),
+                                count: parseInt(d["count(*)"])
+                            };
+                            // TODO: implement that  !!
+                            res.prios = []///////////////////////////////////////////////////////////////////////
+                            // should be an array of 16 numbers with the total count MAPping the prio values,
+                            //  [d["sum(p0)"], d["sum(p1)"], d["sum(p2)"],...]
+                            // Example:
+                            // [10,200,500,... ]
+                            // This is ONE way to create an array of length 100
+                            // and set every value to "0")
+                            var ageSelectFun = function (i) {
+                                var ageFilterLst = d.age.filter(function(a){ return parseInt(a.age) == i+1; }) ;
+                                //console.log(ageFilterLst[0]);
+                                if (ageFilterLst[0] ) { return ageFilterLst[0]["count(*)"];  }
+                                else { return 0; }
                             }
+                            res.ages = d3.range(0,100)
+                                         .map(function(e){ return ageSelectFun(e); }) ;
+                            // TODO: Assign the count for each age to the index position
+                            // eg: res.ages[22] should contain the count value for age 22
+                            // BE AWARE THAT THE DATA MIGHT CONTAIN ages >99 which you have to handle especially
+                            // final result:
+                            // [0,0,0,..,1034,23,...] -- array length is 100
+                            return res;
+                        }
                     )
                     metaData = _metaData;
                     initVis();

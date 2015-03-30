@@ -34,7 +34,6 @@ CountVis.prototype.initVis = function(){
     // - create axis
     // -  implement brushing !!
     // --- ONLY FOR BONUS ---  implement zooming
-
     // TODO: modify this to append an svg element, not modify the current placeholder SVG element
     this.g = this.parentElement//this.svg is not an svg but a group
                    .append("svg")
@@ -59,7 +58,9 @@ CountVis.prototype.initVis = function(){
     this.brush = d3.svg.brush()
                        .x(this.x)
                        .on("brush", function(){ 
-                          $(that.eventHandler).trigger("selectionChanged",that.brush.extent());
+                          var timeRange = {start: that.brush.extent()[0],
+                                           end: that.brush.extent()[1] };
+                          $(that.eventHandler).trigger("selectionChanged",timeRange);
                         });
     // Trigger selectionChanged event. You'd need to account for filtering by time AND type
     // Add axes visual elements
