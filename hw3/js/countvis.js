@@ -58,7 +58,9 @@ CountVis.prototype.initVis = function(){
                       .y1(function(d) { return that.y(d.count); });
     this.brush = d3.svg.brush()
                        .x(this.x)
-                       .on("brush", function(){ console.log(that.brush.extent()); });
+                       .on("brush", function(){ 
+                          $(that.eventHandler).trigger("selectionChanged",that.brush.extent());
+                        });
     // Trigger selectionChanged event. You'd need to account for filtering by time AND type
     // Add axes visual elements
     this.g.append("g")
@@ -83,7 +85,7 @@ CountVis.prototype.initVis = function(){
     this.updateVis();
 }
 /* Method to wrangle the data. In this case it takes an options object */
-CountVis.prototype.wrangleData= function(){
+CountVis.prototype.wrangleData = function(){
     // displayData should hold the data which is visualized
     // pretty simple in this case -- no modifications needed
     this.displayData = this.data;
