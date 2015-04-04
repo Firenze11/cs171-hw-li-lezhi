@@ -15,7 +15,7 @@ AgeVis = function(_parentElement, _data, _metaData){
     this.metaData = _metaData;
     this.displayData = [];
     // TODO: define all constants here
-    this.margin = {top: 20, right: 10, bottom: 30, left: 50},///////////////
+    this.margin = {top: 20, right: 10, bottom: 30, left: 50};///////////////
     this.width=250-this.margin.left-this.margin.right;
     this.height=350-this.margin.left-this.margin.right;
     this.initVis();
@@ -34,9 +34,9 @@ AgeVis.prototype.initVis = function(){
     // creates axis and scales
     this.x = d3.scale.linear().range([0, this.width]);
     this.y = d3.scale.linear().domain([0,100]).range([0,this.height]);
-    this.xAxis = d3.svg.axis()
+    /*this.xAxis = d3.svg.axis()
                    .scale(this.x)
-                   .orient("bottom");
+                   .orient("bottom"); */
     this.yAxis = d3.svg.axis()
                    .scale(this.y)
                    .orient("left");
@@ -52,11 +52,11 @@ AgeVis.prototype.initVis = function(){
     this.g.append("g")
           .attr("class", "y axis")
           .append("text")
-          .attr("transform", "rotate(-90)")
+          .attr("transform", "translate(130)")
           .attr("y", 6)   //??????????????????????????
           .attr("dy", ".71em")
           .style("text-anchor", "end")   //???????????????????????????
-          .text("Vote count, daily");
+          .text("Age distribution, selected");
     // filter, aggregate, modify data
     this.wrangleData(null);
     // call the update method
@@ -82,10 +82,10 @@ AgeVis.prototype.updateVis = function(){
     // TODO: implement update graphs (D3: update, enter, exit)
     // updates scales
     this.x.domain(d3.extent(this.displayData, function(d) { return d; }));
-    console.log(d3.extent(this.displayData, function(d) { return d; }));
+    //console.log(d3.extent(this.displayData, function(d) { return d; }));
     // updates axis
     //this.yAxis.scale(this.y);
-    this.g.select(".x.axis").call(this.xAxis);  
+    //this.g.select(".x.axis").call(this.xAxis);  
     this.g.select(".y.axis").call(this.yAxis);
     // updates graph
     var path = this.g.selectAll(".area")
@@ -103,7 +103,7 @@ AgeVis.prototype.updateVis = function(){
  * @param selection*/
 AgeVis.prototype.onSelectionChange= function (selectionStart, selectionEnd){
     // TODO: call wrangle function
-    console.log(selectionEnd);
+    //console.log(selectionEnd); 
     var filterFunc = function(e){ 
         return e>=selectionStart && e<=selectionEnd ;
     }
@@ -127,7 +127,7 @@ AgeVis.prototype.filterAndAggregate = function(_filter){
     // accumulate all values that fulfill the filter criterion
     // TODO: implement the function that filters the data and sums the values
     //"whole" data within the time range
-    var filteredData = that.data.filter(function(e){ return filter(e.day); });
+    var filteredData = that.data.filter(function(e){ return filter(e.time); }); 
     //console.log(filteredData);
     //a function that returns a list of item i for each list in a given "list of list"
     var ageCountLst = filteredData.map(function(e) { return e.ages; });
