@@ -35,18 +35,15 @@ PrioVis.prototype.initVis = function(){
                    .attr("transform","translate("+this.margin.left+","+this.margin.top+")");
     // creates axis and scales
     this.xDomain = d3.range(16).map(function(i){ 
-    	                           if (i<10) {return that.metaData.choices["10"+i]; }
-    	                           else {return that.metaData.choices["1"+i]; }
-    	                         }); 
-    this.xColor = d3.range(16).map(function(i){ 
-                                 return that.metaData.priorities[i+""]["item-color"];
-                              });
+    	                         if (i<10) {return that.metaData.choices["10"+i]; }
+    	                         else {return that.metaData.choices["1"+i]; }
+    	                      }); 
     /*var translate_FieldName = function(i){                        
         if (i<10) {return that.metaData.choices["10"+i]; }
         else {return that.metaData.choices["1"+i]; }
     };*/
-    this.x = d3.scale.ordinal().domain(this.xDomain).rangeBands([0, this.width],0.2);
-    this.y = d3.scale.linear().range([this.height,0]);
+    this.x = d3.scale.ordinal().domain(this.xDomain).rangeBands([0, this.width],0.1);
+    this.y = d3.scale.linear().range([0,this.height]);
     this.xAxis = d3.svg.axis()
                    .scale(this.x)
                    //.tickFormat(function(d) { return that.metaData.choices[(100+d)+""]; }) translate from "0,1...15" to "100,101...115"
@@ -102,8 +99,8 @@ PrioVis.prototype.updateVis = function(){
     // TODO: implement update graphs (D3: update, enter, exit)
     // updates scales
     //this.x.domain(d3.extent(this.displayData, function(d) { return d; }));
-    var that = this; 
-    this.y.domain([0,d3.extent(this.displayData)[1]]);
+    var that = this;
+    this.y.domain(d3.extent(this.displayData, function(d) { return d; }));
     // updates axis
     this.yAxis.scale(this.y);
     this.g.select(".y.axis").call(this.yAxis);
@@ -115,7 +112,6 @@ PrioVis.prototype.updateVis = function(){
         .append("rect")
         .attr("class", "bar");
     bars.transition()
-        .style("fill",function(d,i){ return that.xColor[i]; })
         .attr("x",function(d,i){ return that.x(that.xDomain[i]); })
         .attr("y",function(d){ return that.y(d); })
         .attr("width", function(d,i){ return that.x.rangeBand(); })

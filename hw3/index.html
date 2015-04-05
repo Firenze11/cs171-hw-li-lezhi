@@ -73,13 +73,15 @@
                 var myCountVis = new CountVis(d3.select("#countVis"),allData, metaData, MyEventHandler);
                 //var myPrioVis = new PrioVis(d3.select("#prioVis"),allData, metaData, MyEventHandler);
                 var myAgeVis = new AgeVis(d3.select("#ageVis"),allData, metaData);
+                var myPrioVis = new PrioVis(d3.select("#prioVis"),allData, metaData);
                 // TODO: bind the eventHandler to the Vis Objects
                 // events will be created from the CountVis object (nothing to do here)
                 // events will be consumed by the PrioVis and AgeVis object (binding should happen here)
                 $(MyEventHandler).bind("selectionChanged", function(event, _timeRange){
                    //myPrioVis.onSelectionChange(_timeRange);
-                   console.log(_timeRange);
+                   //console.log(_timeRange);
                    myAgeVis.onSelectionChange(_timeRange.start,_timeRange.end);
+                   myPrioVis.onSelectionChange(_timeRange.start,_timeRange.end);
                 });
             }
 
@@ -99,7 +101,8 @@
                                 count: parseInt(d["count(*)"])
                             };
                             // TODO: implement that  !!
-                            res.prios = []///////////////////////////////////////////////////////////////////////
+                            res.prios = d3.range(16)
+                                          .map(function(i){ return d["sum(p"+i+")"]; });
                             // should be an array of 16 numbers with the total count MAPping the prio values,
                             //  [d["sum(p0)"], d["sum(p1)"], d["sum(p2)"],...]
                             // Example:
