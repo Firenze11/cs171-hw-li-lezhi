@@ -9,7 +9,7 @@
  * @param _data -- the data array
  * @param _metaData -- the meta-data / data description object
  * @constructor */
-PrioVis = function(_parentElement, _data, _metaData){
+PrioVisD = function(_parentElement, _data, _metaData){
     this.parentElement = _parentElement;
     this.data = _data;
     this.metaData = _metaData;
@@ -22,7 +22,7 @@ PrioVis = function(_parentElement, _data, _metaData){
     this.initVis();
 }
 /* Method that sets up the SVG and the variables */
-PrioVis.prototype.initVis = function(){
+PrioVisD.prototype.initVis = function(){
     var that = this; // read about the this
     //TODO: construct or select SVG
     //TODO: create axis and scales
@@ -35,15 +35,18 @@ PrioVis.prototype.initVis = function(){
                    .attr("transform","translate("+this.margin.left+","+this.margin.top+")");
     // creates axis and scales
     this.xDomain = d3.range(16).map(function(i){ 
-    	                         if (i<10) {return that.metaData.choices["10"+i]; }
-    	                         else {return that.metaData.choices["1"+i]; }
-    	                      }); 
+    	                           if (i<10) {return that.metaData.choices["10"+i]; }
+    	                           else {return that.metaData.choices["1"+i]; }
+    	                         }); 
+    this.xColor = d3.range(16).map(function(i){ 
+                                 return that.metaData.priorities[i+""]["item-color"];
+                              });
     /*var translate_FieldName = function(i){                        
         if (i<10) {return that.metaData.choices["10"+i]; }
         else {return that.metaData.choices["1"+i]; }
     };*/
-    this.x = d3.scale.ordinal().domain(this.xDomain).rangeBands([0, this.width],0.1);
-    this.y = d3.scale.linear().range([0,this.height]);
+    this.x = d3.scale.ordinal().domain(this.xDomain).rangeBands([0, this.width],0.2);
+    this.y = d3.scale.linear().range([this.height,0]);
     this.xAxis = d3.svg.axis()
                    .scale(this.x)
                    //.tickFormat(function(d) { return that.metaData.choices[(100+d)+""]; }) translate from "0,1...15" to "100,101...115"
@@ -69,11 +72,11 @@ PrioVis.prototype.initVis = function(){
     this.g.append("g")
           	.attr("class", "y axis")
           .append("text")
-	        .attr("transform", "translate(130)")
-	        .attr("y", 6)   
-	        .attr("dy", ".71em")
-	        .style("text-anchor", "end")   
-	        .text("Age distribution, selected");
+  	        .attr("transform", "translate(145)")
+  	        .attr("y", 6)   
+  	        .attr("dy", ".71em")
+  	        .style("text-anchor", "end")   
+  	        .text("Choice of priority, comparison");
     // filter, aggregate, modify data
     this.wrangleData(null);
     // call the update method
@@ -81,7 +84,7 @@ PrioVis.prototype.initVis = function(){
 }
 /* Method to wrangle the data. In this case it takes an options object
  * @param _filterFunction - a function that filters data or "null" if none*/
-PrioVis.prototype.wrangleData= function(_filterFunction){
+PrioVisD.prototype.wrangleData= function(_filterFunction){
     // displayData should hold the data which is visualized
     this.displayData = this.filterAndAggregate(_filterFunction);
     //// you might be able to pass some options,
@@ -90,7 +93,7 @@ PrioVis.prototype.wrangleData= function(_filterFunction){
     //var options = _options || {filter: function(){return true;}};
 }
 /* the drawing function - should use the D3 selection, enter, exit */
-PrioVis.prototype.updateVis = function(){
+PrioVisD.prototype.updateVis = function(){
     // Dear JS hipster,
     // you might be able to pass some options as parameter _option
     // But it's not needed to solve the task.
@@ -99,32 +102,44 @@ PrioVis.prototype.updateVis = function(){
     // TODO: implement update graphs (D3: update, enter, exit)
     // updates scales
     //this.x.domain(d3.extent(this.displayData, function(d) { return d; }));
-    var that = this;
-    this.y.domain(d3.extent(this.displayData, function(d) { return d; }));
+    var that = this; 
+    this.y.domain([0,d3.extent(this.displayData, function(d){ return d.all; })[1] ]);
     // updates axis
     this.yAxis.scale(this.y);
     this.g.select(".y.axis").call(this.yAxis);
     // updates graph
+    var bars_allData = this.g.selectAll(".bar_all")
+                             .data(this.displayData);
     var bars = this.g.selectAll(".bar")
                      .data(this.displayData);
-                     console.log(this.displayData);
+    bars_allData.enter()
+                .append("rect")
+                .attr("class", "bar_all");
+    bars_allData.transition()
+                .style("fill","grey")
+                .attr("x",function(d,i){ return that.x(that.xDomain[i]); })
+                .attr("y",function(d){ return that.y(d.all); })
+                .attr("width", function(){ return that.x.rangeBand(); })
+                .attr("height", function(d){ return that.height - that.y(d.all); });  
+    bars_allData.exit().remove();
+
     bars.enter()
         .append("rect")
         .attr("class", "bar");
     bars.transition()
+        .style("fill",function(d,i){ return that.xColor[i]; })
         .attr("x",function(d,i){ return that.x(that.xDomain[i]); })
-        .attr("y",function(d){ return that.y(d); })
-        .attr("width", function(d,i){ return that.x.rangeBand(); })
-        .attr("height", function(d){ return that.height - that.y(d); });  //need to confirm the inner fields of d
+        .attr("y",function(d){ return that.y(d.selected); })
+        .attr("width", function(){ return that.x.rangeBand(); })
+        .attr("height", function(d){ return that.height - that.y(d.selected); });  
     bars.exit().remove();
 }
 /* Gets called by event handler and should create new aggregated data
  * aggregation is done by the function "aggregate(filter)". Filter has to
  * be defined here.
  * @param selection*/
-PrioVis.prototype.onSelectionChange= function (selectionStart, selectionEnd){
+PrioVisD.prototype.onSelectionChange= function (selectionStart, selectionEnd){
     // TODO: call wrangle function
-    console.log(selectionEnd); 
     var filterFunc = function(e){ 
         return e>=selectionStart && e<=selectionEnd ;
     }
@@ -137,7 +152,7 @@ PrioVis.prototype.onSelectionChange= function (selectionStart, selectionEnd){
 /*The aggregate function that creates the counts for each age for a given filter.
  * @param _filter - A filter can be, e.g.,  a function that is only true for data of a given time range
  * @returns {Array|*} */
-PrioVis.prototype.filterAndAggregate = function(_filter){
+PrioVisD.prototype.filterAndAggregate = function(_filter){
     // Set filter to a function that accepts all items
     // ONLY if the parameter _filter is NOT null use this parameter
     var filter = function(){ return true; }
@@ -152,11 +167,13 @@ PrioVis.prototype.filterAndAggregate = function(_filter){
     //console.log(filteredData);
     //a function that returns a list of item i for each list in a given "list of list" 
     //console.log(filteredData);
-    var res = d3.range(16)
-                .map(function(i){ 
-                       return filteredData.map( function(d){ return d.prios[i]; })
-                                          .reduce( function(a, b) { return a + b; })
-                });
+    var compareData = d3.range(16).map( function(i){ 
+                        var res = {};
+                        res.selected = filteredData.map( function(d){ return d.prios[i]; })
+                                                   .reduce( function(a, b) { return a + b; });
+                        res.all = that.data.map( function(d){ return d.prios[i]; })
+                                                   .reduce( function(a, b) { return a + b; });
+                        return res; });
     /*var ageCountLst = filteredData.map(function(e) { return e.ages; });
     var res = [];
     for(var i = 0; i < 100; i++){
@@ -165,5 +182,5 @@ PrioVis.prototype.filterAndAggregate = function(_filter){
     }*/
     //console.log(ageCount);
     // create an array of values for age 0-100
-    return res;
+    return compareData;
 }

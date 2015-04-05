@@ -118,7 +118,7 @@ PrioVis.prototype.updateVis = function(){
         .style("fill",function(d,i){ return that.xColor[i]; })
         .attr("x",function(d,i){ return that.x(that.xDomain[i]); })
         .attr("y",function(d){ return that.y(d); })
-        .attr("width", function(d,i){ return that.x.rangeBand(); })
+        .attr("width", function(){ return that.x.rangeBand(); })
         .attr("height", function(d){ return that.height - that.y(d); });  //need to confirm the inner fields of d
     bars.exit().remove();
 }

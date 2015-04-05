@@ -7,6 +7,7 @@
     <script src="libs/d3/d3.min.js" charset="utf-8"></script>
     <script src="libs/jquery/jquery-2.1.1.min.js" charset="utf-8"></script>
     <script src="libs/bootstrap/js/bootstrap.min.js" charset="utf-8"></script>
+    <script src="libs/d3/queue.min.js"></script>
     <!--Stylesheets-->
     <link rel="stylesheet" type="text/css" href="libs/bootstrap/css/bootstrap.min.css">
     <!-- Get some nice font-->
@@ -15,7 +16,7 @@
     <!-- FROM HERE ON IT IS HW3 stuff-->
     <!--------------------------------->
     <!-- add own vis classes-->
-    <script src = "js/priovis.js"></script>
+    <script src = "js/priovisDesign.js"></script>
     <script src = "js/agevis.js"></script>
     <script src = "js/countvis.js"></script>
     <!-- add own stylesheet-->
@@ -34,29 +35,21 @@
                 <button class="btn btn-sm btn-primary" id="fitInBtn"> <span class="glyphicon glyphicon-resize-horizontal"></span> reset zoom </button>
             </div>
             <div class="col-md-8">
-                <b>current brush:</b> <span id="brushInfo"></span>
+                <b>current brush:  </b> <span id="brushInfo"></span>
             </div>
         </div>
         <div class="row">
             <div class="col-md-9" id="countVis">
-                <!-- TODO: delete placeholder svg element -->
-                <svg width="650" height="330" style="background-color: lightblue">
-                    <text x="50" y="50">HERE should be CountVis</text>
-                </svg>
             </div>
             <div class="col-md-3" id="ageVis">
-                <!-- TODO: delete placeholder svg element -->
-                <svg width="230" height="330" style="background-color: lightcoral">
-                    <text x="50" y="50">HERE should be AgeVis</text>
-                </svg>
             </div>
         </div>
         <div class="row">
             <div class="col-md-12" id="prioVis">
                 <!-- TODO: delete placeholder svg element -->
-                <svg width="650" height="440" style="background-color: lightgreen">
+                <!--<svg width="650" height="440" style="background-color: lightgreen">
                     <text x="50" y="50">HERE should be PrioVis</text>
-                </svg>
+                </svg>-->
             </div>
         </div>
     </div>
@@ -77,9 +70,23 @@
                 //TODO: Create an eventHandler  --> DONE :)
                 var MyEventHandler = new Object();
                 //TODO: Instantiate all Vis Objects here
+                var myCountVis = new CountVis(d3.select("#countVis"),allData, metaData, MyEventHandler);
+                //var myPrioVis = new PrioVis(d3.select("#prioVis"),allData, metaData, MyEventHandler);
+                var myAgeVis = new AgeVis(d3.select("#ageVis"),allData, metaData);
+                var myPrioVis = new PrioVisD(d3.select("#prioVis"),allData, metaData);
                 // TODO: bind the eventHandler to the Vis Objects
                 // events will be created from the CountVis object (nothing to do here)
                 // events will be consumed by the PrioVis and AgeVis object (binding should happen here)
+                $(MyEventHandler).bind("selectionChanged", function(event, _timeRange){
+                    if (_timeRange.start == _timeRange.end) { 
+                        d3.select("#brushInfo").text(""); 
+                    } else {
+                        d3.select("#brushInfo")
+                          .text(dateFormatter(_timeRange.start)+" ~ "+dateFormatter(_timeRange.end));
+                    }
+                   myAgeVis.onSelectionChange(_timeRange.start,_timeRange.end);
+                   myPrioVis.onSelectionChange(_timeRange.start,_timeRange.end);
+                });
             }
 
             // call this function after both files are loaded -- error should be "null" if no error
@@ -87,34 +94,40 @@
                 if (!error) {
                     // make our data look nicer and more useful:
                     // per Day we want to have an object looking like this:
-                    /*
-                    * {
+                    /* {
                     *   time: .. (should be a Date object)
                     *   count: .. (number of all votes)
                     *   prios: [..,..,..,...] (array of number of votes per priority -> array length =16)
-                    *   ages: [..,..,..,..] (array counts of votes per age 0-99)
-                    * */
+                    *   ages: [..,..,..,..] (array counts of votes per age 0-99) */
                     allData = _allData.map(function (d) {
-                                var res = {
-                                    time: dateFormatter.parse(d.day),
-                                    count: parseInt(d["count(*)"])
-                                };
-                                // TODO: implement that  !!
-                                res.prios = []
-                                // should be an array of 16 numbers with the total count MAPping the prio values,
-                                //  [d["sum(p0)"], d["sum(p1)"], d["sum(p2)"],...]
-                                // Example:
-                                // [10,200,500,... ]
-                                // This is ONE way to create an array of length 100
-                                // and set every value to "0")
-                                res.ages = d3.range(0,100). map(function(){return 0;})
-                                // TODO: Assign the count for each age to the index position
-                                // eg: res.ages[22] should contain the count value for age 22
-                                // BE AWARE THAT THE DATA MIGHT CONTAIN ages >99 which you have to handle especially
-                                // final result:
-                                // [0,0,0,..,1034,23,...] -- array length is 100
-                                return res;
+                            var res = {
+                                time: dateFormatter.parse(d.day),
+                                count: parseInt(d["count(*)"])
+                            };
+                            // TODO: implement that  !!
+                            res.prios = d3.range(16)
+                                          .map(function(i){ return d["sum(p"+i+")"]; });
+                            // should be an array of 16 numbers with the total count MAPping the prio values,
+                            //  [d["sum(p0)"], d["sum(p1)"], d["sum(p2)"],...]
+                            // Example:
+                            // [10,200,500,... ]
+                            // This is ONE way to create an array of length 100
+                            // and set every value to "0")
+                            var ageSelectFun = function (i) {
+                                var ageFilterLst = d.age.filter(function(a){ return parseInt(a.age) == i+1; }) ;
+                                //console.log(ageFilterLst[0]);
+                                if (ageFilterLst[0] ) { return ageFilterLst[0]["count(*)"];  }
+                                else { return 0; }
                             }
+                            res.ages = d3.range(0,100)
+                                         .map(function(e){ return ageSelectFun(e); }) ;
+                            // TODO: Assign the count for each age to the index position
+                            // eg: res.ages[22] should contain the count value for age 22
+                            // BE AWARE THAT THE DATA MIGHT CONTAIN ages >99 which you have to handle especially
+                            // final result:
+                            // [0,0,0,..,1034,23,...] -- array length is 100
+                            return res;
+                        }
                     )
                     metaData = _metaData;
                     initVis();
@@ -123,12 +136,18 @@
             var startHere = function(){
                 //TODO: load data here and call "dataLoaded" afterwards
                 // Hint: http://giscollective.org/d3-queue-js/
+                queue()
+                  .defer(d3.json, "data/perDayData.json") 
+                  .defer(d3.json, "data/MYWorld_fields.json") 
+                  .await(function(e,a,m) { return dataLoaded(e,a,m) ;}); 
                 // bind reset zoom button to a function (-- ONLY FOR BONUS --)
                 d3.select("#fitInBtn").on("click", function() {
                     // TODO: -- ONLY FOR BONUS --
                 });
             }
             startHere();
+            /*helper function*/
+            
         })
     </script>
 </body>
