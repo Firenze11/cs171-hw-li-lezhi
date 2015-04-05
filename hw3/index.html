@@ -80,6 +80,12 @@
                 $(MyEventHandler).bind("selectionChanged", function(event, _timeRange){
                    //myPrioVis.onSelectionChange(_timeRange);
                    //console.log(_timeRange);
+                   if (_timeRange.start == _timeRange.end) { 
+                        d3.select("#brushInfo").text(""); 
+                    } else {
+                        d3.select("#brushInfo")
+                          .text(dateFormatter(_timeRange.start)+" ~ "+dateFormatter(_timeRange.end));
+                    }
                    myAgeVis.onSelectionChange(_timeRange.start,_timeRange.end);
                    myPrioVis.onSelectionChange(_timeRange.start,_timeRange.end);
                 });

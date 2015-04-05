@@ -113,9 +113,9 @@ PrioVis.prototype.updateVis = function(){
                      console.log(this.displayData);
     bars.enter()
         .append("rect")
-        .attr("class", "bar");
+        .attr("class", "bar")
+        .style("fill",function(d,i){ return that.xColor[i]; });
     bars.transition()
-        .style("fill",function(d,i){ return that.xColor[i]; })
         .attr("x",function(d,i){ return that.x(that.xDomain[i]); })
         .attr("y",function(d){ return that.y(d); })
         .attr("width", function(){ return that.x.rangeBand(); })
